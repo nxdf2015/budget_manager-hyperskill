@@ -1,21 +1,22 @@
 package budget;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
+import java.io.*;
+import java.lang.reflect.Field;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static budget.Main.TypePurchase.ALL;
 import static java.util.stream.Collectors.toList;
 
-public class BudgetManager {
+public class BudgetManager  implements Serializable{
 
     private double income ;
     private List<Purchase> purchases;
     private double total;
+    private String nameFile = "purchases.txt";
 
     public BudgetManager() {
+        Locale.setDefault(Locale.US);
         income = 0;
         purchases = new ArrayList<>();
         total = 0;
@@ -47,6 +48,7 @@ public class BudgetManager {
         if (type == ALL) {
 
             data = purchases;
+
         }
         else {
            data = getPurchases(type);
@@ -59,6 +61,12 @@ public class BudgetManager {
 
     }
 
+
+
+    public String formatDouble(double number){
+        return String.format("%.2f",number);
+    }
+
     public double getBalance(){
         total = getTotal(ALL);
         return income - total;
@@ -68,10 +76,53 @@ public class BudgetManager {
     public boolean isEmpty() {
         return purchases.isEmpty();
     }
+
+    public boolean save() {
+       try(PrintWriter writer = new PrintWriter(new FileWriter(new File(nameFile),false))){
+           writer.println(income);
+
+           purchases.stream()
+             .forEach(purchase -> writer.println(String.format("%s,%s,%.2f",
+                     purchase.getName(),
+                     purchase.getType(),
+                     purchase.getPrice())));
+
+           return true;
+       } catch (IOException e) {
+           e.printStackTrace();
+       }
+        return false;
+    }
+
+    public boolean load() {
+
+       try(BufferedReader reader= new BufferedReader(new FileReader(new File(nameFile)))){
+           income = Double.parseDouble(reader.readLine());
+           String data;
+           purchases = reader.lines()
+                   .map(line -> line.split(","))
+                   .map(item -> Purchase.of(item[0], Main.TypePurchase.valueOf(item[1]),Double.parseDouble(item[2])))
+                   .collect(Collectors.toList());
+           return true;
+       } catch (FileNotFoundException e) {
+           e.printStackTrace();
+       } catch (IOException e) {
+           e.printStackTrace();
+       }
+        return false;
+    }
+
+    private double round(double n){
+        return Math.round(n * 1000) / 1000;
+    }
+
+    public double getIncome() {
+        return income;
+    }
 }
 
 
-class Purchase {
+class Purchase implements Serializable{
     private String name;
     private double price;
     private Main.TypePurchase type;
@@ -96,6 +147,10 @@ class Purchase {
 
     @Override
     public String toString() {
-        return String.format("%s $%s",name,price);
+        return String.format("%s $%.2f",name,price);
+    }
+
+    public String getName() {
+        return name;
     }
 }

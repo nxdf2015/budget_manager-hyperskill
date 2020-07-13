@@ -4,9 +4,21 @@ import javax.print.DocFlavor;
 import java.util.Scanner;
 import java.util.regex.Pattern;
 
+import static budget.Main.TypePurchase.ALL;
+
 public class Main {
     enum TypePurchase {
-        FOOD,CLOTHES,ENTERTAIRNMENT,OTHER,ALL;
+        FOOD("FOOD"),
+        CLOTHES("CLOTHES"),
+        ENTERTAIRNMENT("ENTERTAIRNMENT"),
+        OTHER("OTHER"),
+        ALL("ALL");
+
+        private final String label;
+
+        private TypePurchase(String label){
+            this.label = label;
+        }
     }
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
@@ -18,6 +30,8 @@ public class Main {
                     "2) Add purchase\n" +
                     "3) Show list of purchases\n" +
                     "4) Balance\n" +
+                    "5) Save\n" +
+                    "6) Load\n"+
                     "0) Exit");
             int option = Integer.parseInt(scanner.nextLine());
             System.out.println();
@@ -91,7 +105,15 @@ public class Main {
                     }
                     break;
                 case 4:
-                    System.out.println("Balance: $"+budgetManager.getBalance());
+                    System.out.println("Balance: $"+budgetManager.formatDouble(budgetManager.getBalance()));
+                    break;
+                case 5:
+                        if(budgetManager.save())
+                        System.out.println("Purchases were saved!");
+                    break;
+                case 6:
+                        if(budgetManager.load())
+                        System.out.println("Purchase were loaded!");
                     break;
 
             }
