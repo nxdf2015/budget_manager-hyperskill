@@ -1,11 +1,14 @@
 package budget;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.io.*;
 import java.lang.reflect.Field;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static budget.Main.TypePurchase.ALL;
+import static budget.Main.TypePurchase.*;
+import static java.util.stream.Collectors.summingDouble;
 import static java.util.stream.Collectors.toList;
 
 public class BudgetManager  implements Serializable{
@@ -119,10 +122,36 @@ public class BudgetManager  implements Serializable{
     public double getIncome() {
         return income;
     }
+
+    public List<Purchase> sortALL() {
+         Collections.sort(purchases);
+         return purchases.stream().filter( p -> p.getPrice() != 0).collect(Collectors.toList());
+    }
+
+
+    public Map<Main.TypePurchase,Double> sortByType() {
+        Purchase[] defaultPurchase  = { Purchase.of("",FOOD,0),
+                Purchase.of("",CLOTHES,0),
+        Purchase.of("",ENTERTAIRNMENT,0),
+        Purchase.of("",OTHER,0)};
+        purchases.addAll(Arrays.asList(defaultPurchase));
+       return
+               purchases
+                .stream()
+                .collect(Collectors.groupingBy(Purchase::getType,summingDouble(Purchase::getPrice)));
+
+    }
+
+    public List<Purchase> sortType(Main.TypePurchase typeSelected) {
+       return  purchases.stream()
+                .filter( purchase ->  purchase.getType() == typeSelected && purchase.getPrice() != 0)
+                .sorted()
+                .collect(Collectors.toList());
+    }
 }
 
 
-class Purchase implements Serializable{
+class Purchase implements Serializable,Comparable<Purchase>{
     private String name;
     private double price;
     private Main.TypePurchase type;
@@ -152,5 +181,18 @@ class Purchase implements Serializable{
 
     public String getName() {
         return name;
+    }
+
+    @Override
+    public int compareTo(@NotNull Purchase purchase) {
+        if (price > purchase.getPrice()){
+            return -1;
+        }
+        else if (price == purchase.getPrice()){
+            return 0;
+        }
+        else {
+            return 1;
+        }
     }
 }
